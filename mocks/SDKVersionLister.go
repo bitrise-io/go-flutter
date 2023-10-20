@@ -12,25 +12,25 @@ type SDKVersionLister struct {
 	mock.Mock
 }
 
-// ListReleasesOnChannel provides a mock function with given fields: platform, architecture, channel
-func (_m *SDKVersionLister) ListReleasesOnChannel(platform fluttersdk.Platform, architecture fluttersdk.Architecture, channel fluttersdk.Channel) ([]fluttersdk.Release, error) {
-	ret := _m.Called(platform, architecture, channel)
+// ListReleasesByChannel provides a mock function with given fields: platform, architecture
+func (_m *SDKVersionLister) ListReleasesByChannel(platform fluttersdk.Platform, architecture fluttersdk.Architecture) (map[string][]fluttersdk.Release, error) {
+	ret := _m.Called(platform, architecture)
 
-	var r0 []fluttersdk.Release
+	var r0 map[string][]fluttersdk.Release
 	var r1 error
-	if rf, ok := ret.Get(0).(func(fluttersdk.Platform, fluttersdk.Architecture, fluttersdk.Channel) ([]fluttersdk.Release, error)); ok {
-		return rf(platform, architecture, channel)
+	if rf, ok := ret.Get(0).(func(fluttersdk.Platform, fluttersdk.Architecture) (map[string][]fluttersdk.Release, error)); ok {
+		return rf(platform, architecture)
 	}
-	if rf, ok := ret.Get(0).(func(fluttersdk.Platform, fluttersdk.Architecture, fluttersdk.Channel) []fluttersdk.Release); ok {
-		r0 = rf(platform, architecture, channel)
+	if rf, ok := ret.Get(0).(func(fluttersdk.Platform, fluttersdk.Architecture) map[string][]fluttersdk.Release); ok {
+		r0 = rf(platform, architecture)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]fluttersdk.Release)
+			r0 = ret.Get(0).(map[string][]fluttersdk.Release)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(fluttersdk.Platform, fluttersdk.Architecture, fluttersdk.Channel) error); ok {
-		r1 = rf(platform, architecture, channel)
+	if rf, ok := ret.Get(1).(func(fluttersdk.Platform, fluttersdk.Architecture) error); ok {
+		r1 = rf(platform, architecture)
 	} else {
 		r1 = ret.Error(1)
 	}

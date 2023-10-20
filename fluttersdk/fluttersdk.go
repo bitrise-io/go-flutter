@@ -70,11 +70,31 @@ func NewSDKVersionFinder() SDKVersionFinder {
 }
 
 func (f SDKVersionFinder) FindLatestReleaseFor(platform Platform, architecture Architecture, channel Channel, query SDKQuery) (*Release, error) {
-	releases, err := f.SDKVersionLister.ListReleasesOnChannel(platform, architecture, channel)
+	releasesByChannel, err := f.SDKVersionLister.ListReleasesByChannel(platform, architecture)
 	if err != nil {
 		return nil, err
 	}
 
+	if channel != "" {
+		releases := releasesByChannel[string(channel)]
+		return findLatestReleaseFor(releases, query)
+	}
+
+	for _, c := range []Channel{Stable, Beta, Dev} {
+		releases := releasesByChannel[string(c)]
+		release, err := findLatestReleaseFor(releases, query)
+		if err != nil {
+			return nil, err
+		}
+		if release != nil {
+			return release, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func findLatestReleaseFor(releases []Release, query SDKQuery) (*Release, error) {
 	var sortErr error
 	// sorted in descending version order
 	sort.Slice(releases, func(i, j int) bool {
@@ -96,7 +116,7 @@ func (f SDKVersionFinder) FindLatestReleaseFor(platform Platform, architecture A
 		return releaseVersionJ.LessThan(releaseVersionI)
 	})
 	if sortErr != nil {
-		return nil, err
+		return nil, sortErr
 	}
 
 	for _, release := range releases {
@@ -138,33 +158,31 @@ func (f SDKVersionFinder) FindLatestReleaseFor(platform Platform, architecture A
 }
 
 type SDKVersionLister interface {
-	ListReleasesOnChannel(platform Platform, architecture Architecture, channel Channel) ([]Release, error)
+	ListReleasesByChannel(platform Platform, architecture Architecture) (map[string][]Release, error)
 }
 
 type defaultSDKVersionLister struct {
 }
 
-func (l defaultSDKVersionLister) ListReleasesOnChannel(platform Platform, architecture Architecture, channel Channel) ([]Release, error) {
+func (l defaultSDKVersionLister) ListReleasesByChannel(platform Platform, architecture Architecture) (map[string][]Release, error) {
 	allReleasesResp, err := listAllReleases(platform)
 	if err != nil {
 		return nil, err
 	}
 
-	var releases []Release
+	releasesByChannel := map[string][]Release{}
 
 	for _, release := range allReleasesResp.Releases {
 		if platform == MacOS && release.DartSdkArch != string(architecture) {
 			continue
 		}
 
-		if release.Channel != string(channel) {
-			continue
-		}
-
+		releases := releasesByChannel[release.Channel]
 		releases = append(releases, release)
+		releasesByChannel[release.Channel] = releases
 	}
 
-	return releases, nil
+	return releasesByChannel, nil
 }
 
 func listAllReleases(platform Platform) (*ReleasesResp, error) {

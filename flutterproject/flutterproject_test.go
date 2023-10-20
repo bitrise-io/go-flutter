@@ -51,33 +51,38 @@ func TestProject_FlutterAndDartSDKVersions(t *testing.T) {
 func TestProject_FlutterSDKVersionToUse(t *testing.T) {
 	tests := []struct {
 		name                       string
-		availableSDKs              []fluttersdk.Release
+		availableSDKsByChannel     map[string][]fluttersdk.Release
 		projectSDKFromToolVersions string
-		want                       string
+		wantVersion                string
+		wantChannel                string
 	}{
 		{
 			name: "Project required version is available",
-			availableSDKs: []fluttersdk.Release{{
+			availableSDKsByChannel: map[string][]fluttersdk.Release{"stable": {{
+				Channel:        "stable",
 				Version:        "3.13.8",
 				DartSdkVersion: "3.1.4",
-			}},
+			}}},
 			projectSDKFromToolVersions: "3.13.8",
-			want:                       "3.13.8",
+			wantVersion:                "3.13.8",
+			wantChannel:                "stable",
 		},
 		{
 			name: "Project required version is not available",
-			availableSDKs: []fluttersdk.Release{{
+			availableSDKsByChannel: map[string][]fluttersdk.Release{"stable": {{
+				Channel:        "stable",
 				Version:        "3.13.8",
 				DartSdkVersion: "3.1.4",
-			}},
+			}}},
 			projectSDKFromToolVersions: "3.13.9",
-			want:                       "",
+			wantVersion:                "",
+			wantChannel:                "",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			availableSDKLister := new(mocks.SDKVersionLister)
-			availableSDKLister.On("ListReleasesOnChannel", mock.Anything, mock.Anything, mock.Anything).Return(tt.availableSDKs, nil)
+			availableSDKLister.On("ListReleasesByChannel", mock.Anything, mock.Anything).Return(tt.availableSDKsByChannel, nil)
 
 			sdkVersionFinder := fluttersdk.SDKVersionFinder{SDKVersionLister: availableSDKLister}
 
@@ -91,9 +96,10 @@ func TestProject_FlutterSDKVersionToUse(t *testing.T) {
 				fileManager:      fileOpener,
 				sdkVersionFinder: sdkVersionFinder,
 			}
-			got, err := p.FlutterSDKVersionToUse()
+			gotVersion, gotChannel, err := p.FlutterSDKVersionToUse()
 			require.NoError(t, err)
-			require.Equal(t, tt.want, got)
+			require.Equal(t, tt.wantVersion, gotVersion)
+			require.Equal(t, tt.wantChannel, gotChannel)
 		})
 	}
 }
