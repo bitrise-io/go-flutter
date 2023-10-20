@@ -61,8 +61,16 @@ type SDKQuery struct {
 	DartVersionConstraint    *semver.Constraints
 }
 
-func FindLatestRelease(platform Platform, architecture Architecture, channel Channel, query SDKQuery) (*Release, error) {
-	releases, err := listReleasesOnChannel(platform, architecture, channel)
+type SDKVersionFinder struct {
+	SDKVersionLister SDKVersionLister
+}
+
+func NewSDKVersionFinder() SDKVersionFinder {
+	return SDKVersionFinder{SDKVersionLister: defaultSDKVersionLister{}}
+}
+
+func (f SDKVersionFinder) FindLatestReleaseFor(platform Platform, architecture Architecture, channel Channel, query SDKQuery) (*Release, error) {
+	releases, err := f.SDKVersionLister.ListReleasesOnChannel(platform, architecture, channel)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +137,14 @@ func FindLatestRelease(platform Platform, architecture Architecture, channel Cha
 	return nil, nil
 }
 
-func listReleasesOnChannel(platform Platform, architecture Architecture, channel Channel) ([]Release, error) {
+type SDKVersionLister interface {
+	ListReleasesOnChannel(platform Platform, architecture Architecture, channel Channel) ([]Release, error)
+}
+
+type defaultSDKVersionLister struct {
+}
+
+func (l defaultSDKVersionLister) ListReleasesOnChannel(platform Platform, architecture Architecture, channel Channel) ([]Release, error) {
 	allReleasesResp, err := listAllReleases(platform)
 	if err != nil {
 		return nil, err

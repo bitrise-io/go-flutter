@@ -13,6 +13,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type SDKVersionFinder interface {
+	FindLatestReleaseFor(platform fluttersdk.Platform, architecture fluttersdk.Architecture, channel fluttersdk.Channel, query fluttersdk.SDKQuery) (*fluttersdk.Release, error)
+}
+
 type FlutterAndDartSDKVersions struct {
 	FVMFlutterVersion         *semver.Version
 	ASDFFlutterVersion        *semver.Version
@@ -31,11 +35,12 @@ type Project struct {
 	pubspecPth string
 	pubspec    Pubspec
 
-	fileManager fileutil.FileManager
-	pathChecker pathutil.PathChecker
+	fileManager      fileutil.FileManager
+	pathChecker      pathutil.PathChecker
+	sdkVersionFinder SDKVersionFinder
 }
 
-func New(rootDir string, fileManager fileutil.FileManager, pathChecker pathutil.PathChecker) (*Project, error) {
+func New(rootDir string, fileManager fileutil.FileManager, pathChecker pathutil.PathChecker, sdkVersionFinder SDKVersionFinder) (*Project, error) {
 	pubspecPth := filepath.Join(rootDir, sdk.PubspecRelPath)
 	pubspecFile, err := fileManager.Open(pubspecPth)
 	if err != nil {
@@ -48,11 +53,12 @@ func New(rootDir string, fileManager fileutil.FileManager, pathChecker pathutil.
 	}
 
 	return &Project{
-		rootDir:     rootDir,
-		pubspecPth:  pubspecPth,
-		fileManager: fileManager,
-		pathChecker: pathChecker,
-		pubspec:     pubspec,
+		rootDir:          rootDir,
+		pubspecPth:       pubspecPth,
+		pubspec:          pubspec,
+		fileManager:      fileManager,
+		pathChecker:      pathChecker,
+		sdkVersionFinder: sdkVersionFinder,
 	}, nil
 }
 
@@ -172,9 +178,12 @@ func (p *Project) FlutterSDKVersionToUse() (string, error) {
 	}
 
 	sdkQuery := createSDKQuery(sdkVersions)
-	release, err := fluttersdk.FindLatestRelease(fluttersdk.MacOS, fluttersdk.ARM64, fluttersdk.Stable, sdkQuery)
+	release, err := p.sdkVersionFinder.FindLatestReleaseFor(fluttersdk.MacOS, fluttersdk.ARM64, fluttersdk.Stable, sdkQuery)
 	if err != nil {
 		return "", err
+	}
+	if release == nil {
+		return "", nil
 	}
 
 	return release.Version, nil
