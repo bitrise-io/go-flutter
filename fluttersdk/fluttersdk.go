@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"sort"
 	"time"
 
@@ -119,13 +120,22 @@ func findLatestReleaseFor(releases []Release, query SDKQuery) (*Release, error) 
 		return nil, sortErr
 	}
 
+	// Used for parsing the version number from Dart SDK versions like: "2.17.0 (build 2.17.0-266.1.beta)"
+	dartSDKWithBuildVersionExp := regexp.MustCompile(`(.+) \(build (.+)\)`)
+
 	for _, release := range releases {
 		releaseFlutterVersion, err := semver.NewVersion(release.Version)
 		if err != nil {
 			return nil, err
 		}
 
-		releaseDartVersion, err := semver.NewVersion(release.DartSdkVersion)
+		dartSDKVersion := release.DartSdkVersion
+		matches := dartSDKWithBuildVersionExp.FindStringSubmatch(dartSDKVersion)
+		if len(matches) == 3 {
+			dartSDKVersion = matches[1]
+		}
+
+		releaseDartVersion, err := semver.NewVersion(dartSDKVersion)
 		if err != nil {
 			return nil, err
 		}
@@ -162,10 +172,17 @@ type SDKVersionLister interface {
 }
 
 type defaultSDKVersionLister struct {
+	baseURLFormat string
 }
 
+func NewSDKVersionLister() SDKVersionLister {
+	return defaultSDKVersionLister{baseURLFormat: flutterInfraReleasesURLFormat}
+}
+
+const flutterInfraReleasesURLFormat = "https://storage.googleapis.com/flutter_infra_release/releases/releases_%s.json"
+
 func (l defaultSDKVersionLister) ListReleasesByChannel(platform Platform, architecture Architecture) (map[string][]Release, error) {
-	allReleasesResp, err := listAllReleases(platform)
+	allReleasesResp, err := l.listAllReleases(platform)
 	if err != nil {
 		return nil, err
 	}
@@ -185,8 +202,8 @@ func (l defaultSDKVersionLister) ListReleasesByChannel(platform Platform, archit
 	return releasesByChannel, nil
 }
 
-func listAllReleases(platform Platform) (*ReleasesResp, error) {
-	flutterReleaseURL := fmt.Sprintf("https://storage.googleapis.com/flutter_infra_release/releases/releases_%s.json", platform)
+func (l defaultSDKVersionLister) listAllReleases(platform Platform) (*ReleasesResp, error) {
+	flutterReleaseURL := fmt.Sprintf(l.baseURLFormat, platform)
 	client := http.DefaultClient
 	resp, err := client.Get(flutterReleaseURL)
 	if err != nil {
