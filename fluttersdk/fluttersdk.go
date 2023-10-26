@@ -67,7 +67,7 @@ type SDKVersionFinder struct {
 }
 
 func NewSDKVersionFinder() SDKVersionFinder {
-	return SDKVersionFinder{SDKVersionLister: defaultSDKVersionLister{}}
+	return SDKVersionFinder{SDKVersionLister: NewSDKVersionLister()}
 }
 
 func (f SDKVersionFinder) FindLatestReleaseFor(platform Platform, architecture Architecture, channel Channel, query SDKQuery) (*Release, error) {
