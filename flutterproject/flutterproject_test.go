@@ -31,7 +31,9 @@ func TestProject_FlutterAndDartSDKVersions(t *testing.T) {
 
 	require.Equal(t, string(b), `{
 	"FVMFlutterVersion": "3.7.12",
+	"FVMFlutterChannel": "",
 	"ASDFFlutterVersion": "3.7.12",
+	"ASDFFlutterChannel": "",
 	"PubspecFlutterVersion": {
 		"Version": null,
 		"Constraint": "^3.7.12"
