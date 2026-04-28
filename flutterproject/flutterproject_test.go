@@ -91,6 +91,7 @@ func TestProject_FlutterSDKVersionToUse(t *testing.T) {
 			fileOpener := new(mocks.FileManager)
 			fileOpener.On("OpenReaderIfExists", ".tool-versions").Return(strings.NewReader("flutter "+tt.projectSDKFromToolVersions), nil)
 			fileOpener.On("OpenReaderIfExists", ".fvm/fvm_config.json").Return(nil, nil)
+			fileOpener.On("OpenReaderIfExists", ".fvmrc").Return(nil, nil)
 			fileOpener.On("OpenReaderIfExists", "pubspec.lock").Return(nil, nil)
 			fileOpener.On("OpenReaderIfExists", "pubspec.yaml").Return(nil, nil)
 
