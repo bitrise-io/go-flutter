@@ -51,3 +51,43 @@ func Test_parseFVMFlutterVersion(t *testing.T) {
 		})
 	}
 }
+
+func Test_parseFVMRCFlutterVersion(t *testing.T) {
+	tests := []struct {
+		name           string
+		fvmrcReader    io.Reader
+		wantFlutterSDK string
+		wantChannel    string
+		wantErr        string
+	}{
+		{
+			name:           "Real .fvmrc",
+			fvmrcReader:    strings.NewReader(testassets.FVMRC),
+			wantFlutterSDK: "3.41.7",
+		},
+		{
+			name:           "Real .fvmrc with channel",
+			fvmrcReader:    strings.NewReader(testassets.FVMRCWithChannel),
+			wantFlutterSDK: "3.41.7",
+			wantChannel:    "stable",
+		},
+		{
+			name:        "Empty .fvmrc",
+			fvmrcReader: strings.NewReader(""),
+			wantErr:     "EOF",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotFlutterSDK, gotChannel, err := parseFVMRCFlutterVersion(tt.fvmrcReader)
+			if tt.wantErr != "" {
+				require.EqualError(t, err, tt.wantErr)
+				require.Empty(t, gotFlutterSDK)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.wantFlutterSDK, gotFlutterSDK)
+				require.Equal(t, tt.wantChannel, gotChannel)
+			}
+		})
+	}
+}
