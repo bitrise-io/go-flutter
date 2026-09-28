@@ -154,34 +154,30 @@ func (p *Project) FlutterAndDartSDKVersions() (FlutterAndDartSDKVersions, error)
 	fvmFlutterVersion, fvmFlutterChannel, err := sdk.NewFVMVersionReader(p.fileManager).ReadSDKVersion(p.rootDir)
 	if err != nil {
 		return FlutterAndDartSDKVersions{}, err
-	} else {
-		sdkVersions.FVMFlutterVersion = fvmFlutterVersion
-		sdkVersions.FVMFlutterChannel = fvmFlutterChannel
 	}
+	sdkVersions.FVMFlutterVersion = fvmFlutterVersion
+	sdkVersions.FVMFlutterChannel = fvmFlutterChannel
 
 	asdfFlutterVersion, asdfFlutterChannel, err := sdk.NewASDFVersionReader(p.fileManager).ReadSDKVersions(p.rootDir)
 	if err != nil {
 		return FlutterAndDartSDKVersions{}, err
-	} else {
-		sdkVersions.ASDFFlutterVersion = asdfFlutterVersion
-		sdkVersions.ASDFFlutterChannel = asdfFlutterChannel
 	}
+	sdkVersions.ASDFFlutterVersion = asdfFlutterVersion
+	sdkVersions.ASDFFlutterChannel = asdfFlutterChannel
 
 	pubspecLockFlutterVersion, pubspecLockDartVersion, err := sdk.NewPubspecLockVersionReader(p.fileManager).ReadSDKVersions(p.rootDir)
 	if err != nil {
 		return FlutterAndDartSDKVersions{}, err
-	} else {
-		sdkVersions.PubspecLockFlutterVersion = pubspecLockFlutterVersion
-		sdkVersions.PubspecLockDartVersion = pubspecLockDartVersion
 	}
+	sdkVersions.PubspecLockFlutterVersion = pubspecLockFlutterVersion
+	sdkVersions.PubspecLockDartVersion = pubspecLockDartVersion
 
 	pubspecFlutterVersion, pubspecDartVersion, err := sdk.NewPubspecVersionReader(p.fileManager).ReadSDKVersions(p.rootDir)
 	if err != nil {
 		return FlutterAndDartSDKVersions{}, err
-	} else {
-		sdkVersions.PubspecFlutterVersion = pubspecFlutterVersion
-		sdkVersions.PubspecDartVersion = pubspecDartVersion
 	}
+	sdkVersions.PubspecFlutterVersion = pubspecFlutterVersion
+	sdkVersions.PubspecDartVersion = pubspecDartVersion
 
 	return sdkVersions, nil
 }
